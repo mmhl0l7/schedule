@@ -214,16 +214,33 @@
     .submit-btn { background: var(--main-color); color: #fff; border: none; width: 100%; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 6px; }
     .cancel-edit-btn { background: #ccc; color: #fff; border: none; width: 100%; padding: 6px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 4px; font-size: 11px; }
 
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; background: #fff; padding: 8px; border-radius: 16px; border: 1px solid var(--border-color); }
-    .cal-cell { min-height: 65px; border: 1px solid #eee; border-radius: 6px; padding: 3px; font-size: 9px; background: #fafafa; overflow: hidden; cursor: pointer; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #fff; padding: 6px; border-radius: 16px; border: 1px solid var(--border-color); }
+    .cal-cell { min-height: 65px; border: 1px solid #eee; border-radius: 4px; padding: 2px; font-size: 9px; background: #fafafa; overflow: hidden; cursor: pointer; position: relative; }
     .cal-cell.has-event { background: #f4f4f4; border-color: #bbb; }
     .cal-cell.is-today { background: #eaeaea !important; border: 2px solid var(--deep-color) !important; }
     .cal-day-num { font-weight: bold; color: #444; margin-bottom: 2px; display: block; }
     
-    .cal-event-title { padding: 1px 4px; border-radius: 4px; margin-bottom: 2px; font-size: 8px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; border: 1px solid transparent; }
-    .cal-event-title.ev-honda { background: var(--color-honda-light); color: #856404; border-color: var(--color-honda); }
-    .cal-event-title.ev-hamakawa { background: var(--color-hamakawa-light); color: #343a40; border-color: var(--color-hamakawa); }
-    .cal-event-title.ev-roirom { background: var(--color-roirom-light); color: #111; border-color: var(--color-roirom); }
+    /* 1本につながる帯（バー）スタイル */
+    .cal-event-bar { 
+      padding: 2px 4px; 
+      margin-bottom: 2px; 
+      font-size: 8px; 
+      font-weight: bold; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      display: block; 
+      border: 1px solid transparent; 
+    }
+    .cal-event-bar.ev-honda { background: var(--color-honda-light); color: #856404; border-color: var(--color-honda); }
+    .cal-event-bar.ev-hamakawa { background: var(--color-hamakawa-light); color: #343a40; border-color: var(--color-hamakawa); }
+    .cal-event-bar.ev-roirom { background: var(--color-roirom-light); color: #111; border-color: var(--color-roirom); }
+
+    /* 期間のつながりを演出する角丸処理 */
+    .cal-event-bar.bar-start { border-top-left-radius: 6px; border-bottom-left-radius: 6px; margin-right: -3px; z-index: 2; }
+    .cal-event-bar.bar-middle { border-radius: 0; margin-left: -3px; margin-right: -3px; z-index: 1; }
+    .cal-event-bar.bar-end { border-top-right-radius: 6px; border-bottom-right-radius: 6px; margin-left: -3px; z-index: 2; }
+    .cal-event-bar.bar-single { border-radius: 6px; }
 
     .no-data { text-align: center; color: #888; font-size: 12px; padding: 20px; background: #fff; border-radius: 12px; }
 
@@ -1268,7 +1285,6 @@
       let targetMonthDate = new Date(currentYear, currentMonth, 1);
       let targetMonthEndDate = new Date(currentYear, currentMonth + 1, 0);
 
-      // カレンダー表示の場合は期間が当月に少しでもかかっていれば表示
       if (currentViewMode === "calendar") {
         if (itemEndDate < targetMonthDate || itemDate > targetMonthEndDate) return false;
         if (!currentMemberFilters.includes("すべて")) {
@@ -1277,7 +1293,6 @@
         return true;
       }
 
-      // リスト表示の場合は開始日が当月かどうか
       if (itemDate.getFullYear() !== currentYear || itemDate.getMonth() !== currentMonth) return false;
 
       let matchesType = false;
@@ -1318,9 +1333,9 @@
   }
 
   function getCalendarEventClass(member) {
-    if (member === "本多大夢") return "cal-event-title ev-honda";
-    if (member === "浜川路己") return "cal-event-title ev-hamakawa";
-    return "cal-event-title ev-roirom";
+    if (member === "本多大夢") return "ev-honda";
+    if (member === "浜川路己") return "ev-hamakawa";
+    return "ev-roirom";
   }
 
   function createCardHtml(item) {
@@ -1446,7 +1461,6 @@
 
       const dayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
-      // 期間（開始日〜終了日）にこの日が含まれるイベントを抽出
       const dayEvents = data.filter(item => {
         let start = item.date;
         let end = item.endDate ? item.endDate : item.date;
@@ -1458,7 +1472,19 @@
         dayEvents.forEach(ev => {
           const evEl = document.createElement("span");
           let evMember = ev.member || "ROIROM";
-          evEl.className = getCalendarEventClass(evMember);
+          let colorClass = getCalendarEventClass(evMember);
+          
+          let start = ev.date;
+          let end = ev.endDate ? ev.endDate : ev.date;
+          
+          let positionClass = "bar-single";
+          if (start !== end) {
+            if (dayStr === start) positionClass = "bar-start";
+            else if (dayStr === end) positionClass = "bar-end";
+            else positionClass = "bar-middle";
+          }
+
+          evEl.className = `cal-event-bar ${colorClass} ${positionClass}`;
           evEl.textContent = ev.title;
           cell.appendChild(evEl);
         });
