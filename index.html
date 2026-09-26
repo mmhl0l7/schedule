@@ -368,7 +368,7 @@
   <div class="profile-card">
     <div class="profile-summary-bar" onclick="toggleProfileAccordion()">
       <div class="profile-header">
-        <div class="profile-avatar" id="pf-avatar-icon">🖤</div>
+        <div class="profile-avatar" id="pf-avatar-icon">👑</div>
         <div class="profile-name-area">
           <h2 id="pf-display-name">ROIROM (本多大夢・浜川路己)</h2>
           <p id="pf-display-sub">プロフィール＆関連リンクまとめ</p>
@@ -387,7 +387,7 @@
     <div style="font-size: 13px; font-weight: bold; color: var(--deep-color); margin-bottom: 8px;">✏️ プロフィール・リンク編集</div>
     <div class="form-group"><label>名前</label><input type="text" id="input-pf-name" value="ROIROM (本多大夢・浜川路己)"></div>
     <div class="form-group"><label>サブタイトル</label><input type="text" id="input-pf-sub" value="プロフィール＆関連リンクまとめ"></div>
-    <div class="form-group"><label>アイコン</label><input type="text" id="input-pf-icon" value="🖤"></div>
+    <div class="form-group"><label>アイコン</label><input type="text" id="input-pf-icon" value="👑"></div>
     <div class="form-group">
       <label>リンク設定 (カテゴリ: 名前=URL形式を改行区切り)</label>
       <textarea id="input-pf-links" rows="8"></textarea>
@@ -548,7 +548,7 @@
   let profileData = {
     name: "ROIROM (本多大夢・浜川路己)",
     sub: "プロフィール＆関連リンクまとめ",
-    icon: "🖤",
+    icon: "👑",
     sections: [
       {
         category: "🌟 公式リンク",
@@ -603,6 +603,31 @@
     saveItemsToStorage();
   }
 
+  function checkAndUpdateReleaseStatus() {
+    const todayStr = `${realNow.getFullYear()}-${String(realNow.getMonth() + 1).padStart(2, '0')}-${String(realNow.getDate()).padStart(2, '0')}`;
+    let updated = false;
+
+    itemsData.forEach(item => {
+      if (item.type === "MAGAZINE" || item.type === "CD発売") {
+        if (item.date && item.date <= todayStr) {
+          let statuses = Array.isArray(item.status) ? item.status : [item.status];
+          if (statuses.includes("予約受付中")) {
+            statuses = statuses.filter(s => s !== "予約受付中");
+            if (!statuses.includes("発売中")) {
+              statuses.push("発売中");
+            }
+            item.status = statuses;
+            updated = true;
+          }
+        }
+      }
+    });
+
+    if (updated) {
+      saveItemsToStorage();
+    }
+  }
+
   function saveItemsToStorage() {
     localStorage.setItem("roirom_schedule_items", JSON.stringify(itemsData));
   }
@@ -618,7 +643,7 @@
     notificationsData.unshift({
       id: Date.now(),
       time: timeStr,
-      msg: `新しい予定が登録されました！ [🖤 ${title}]`,
+      msg: `新しい予定が登録されました！ [👑 ${title}]`,
       unread: true
     });
     saveNotificationsToStorage();
@@ -689,6 +714,8 @@
       btn.classList.add("spinning");
       setTimeout(() => { btn.classList.remove("spinning"); }, 600);
     }
+
+    checkAndUpdateReleaseStatus();
 
     renderProfileCard();
     updateStatusFilterPills();
@@ -835,7 +862,6 @@
   function updateFormVisibilityBytype() {
     const typeSelect = document.getElementById("input-type");
     const targetType = typeSelect ? typeSelect.value : currentMainType;
-    // MAGAZINEまたはCD発売、ANNIVERSARYの時は時間と終了日を非表示
     const hideTimeAndEnd = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY");
     document.getElementById("group-time").style.display = hideTimeAndEnd ? "none" : "block";
     document.getElementById("group-end-date").style.display = hideTimeAndEnd ? "none" : "block";
@@ -1222,7 +1248,6 @@
         return true;
       }
 
-      // MAGAZINEタブのときは「MAGAZINE」と「CD発売」の両方を表示対象にする
       let matchesType = false;
       if (currentMainType === "MAGAZINE") {
         matchesType = (item.type === "MAGAZINE" || item.type === "CD発売" || item.type === "ANNIVERSARY");
@@ -1271,7 +1296,6 @@
     let purchaseText = checkedCount > 0 ? `✓ 完了/済 (${checkedCount})` : "○ 予約/購入管理";
     let purchaseClass = checkedCount > 0 ? "purchase-status-badge done" : "purchase-status-badge";
     
-    // MAGAZINEまたはCD発売の時のみ予約ボタンを表示
     let purchaseButtonHtml = "";
     if (item.type === "MAGAZINE" || item.type === "CD発売") {
       purchaseButtonHtml = `<button class="${purchaseClass}" onclick="event.stopPropagation(); openManageModal(${item.id})">${purchaseText}</button>`;
