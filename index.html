@@ -32,6 +32,7 @@
       margin: 0;
       padding: 10px;
       color: #333;
+      padding-bottom: 50px;
     }
     .app-container {
       width: 100%;
@@ -361,7 +362,9 @@
     .manage-save-btn { background: #1a1a1a; color: #fff; border: none; width: 100%; padding: 10px; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; margin-top: 14px; }
     .manage-clear-btn { background: #fff; color: #666; border: 1px solid #ccc; width: 100%; padding: 8px; border-radius: 12px; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 8px; }
 
-    .footer-admin-area { text-align: center; margin: 30px 0 15px 0; }
+    .footer-admin-area { text-align: center; margin: 30px 0 15px 0; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+    .admin-main-add-btn { background: #1a1a1a; color: #fff; border: none; width: 100%; padding: 12px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .admin-main-add-btn.show { display: block; }
     .admin-footer-btn { background: none; border: none; color: #aaa; font-size: 10px; cursor: pointer; text-decoration: underline; padding: 5px; }
     .admin-footer-btn.logged-in { color: var(--deep-color); font-weight: bold; text-decoration: none; }
   </style>
@@ -503,6 +506,7 @@
   <div id="content-area"></div>
 
   <div class="footer-admin-area">
+    <button class="admin-main-add-btn" id="admin-main-add-btn" onclick="openCreateForm()">＋ 新規スケジュール追加</button>
     <button class="admin-footer-btn" id="admin-toggle-btn" onclick="checkAdminAndToggleForm()">⚙️ 管理者ログイン</button>
   </div>
 </div>
@@ -750,14 +754,19 @@
     checkAndUpdateReleaseStatus();
 
     const adminBtn = document.getElementById("admin-toggle-btn");
+    const mainAddBtn = document.getElementById("admin-main-add-btn");
+
     if (isAdminLoggedIn) {
-      adminBtn.textContent = "⚙️ 管理者モード中 (ログアウト)";
+      adminBtn.textContent = "⚙️ ログアウトする";
       adminBtn.classList.add("logged-in");
       document.getElementById("profile-edit-btn").classList.add("show");
+      mainAddBtn.classList.add("show");
     } else {
       adminBtn.textContent = "⚙️ 管理者ログイン";
       adminBtn.classList.remove("logged-in");
       document.getElementById("profile-edit-btn").classList.remove("show");
+      mainAddBtn.classList.remove("show");
+      document.getElementById("admin-form").style.display = "none";
     }
 
     renderProfileCard();
@@ -1059,40 +1068,26 @@
       if (pwd === "roirom123") {
         isAdminLoggedIn = true;
         sessionStorage.setItem("roirom_admin_logged", "true");
-        const btn = document.getElementById("admin-toggle-btn");
-        btn.textContent = "⚙️ 管理者モード中 (ログアウト)";
-        btn.classList.add("logged-in");
-        document.getElementById("profile-edit-btn").classList.add("show");
-        
-        updateStatusFilterPills();
-        updateFormTypeOptions();
-        updateFormStatusOptions();
-
+        initApp();
         alert("管理者としてログインしました！");
-        render();
       } else {
         if (pwd !== null) alert("パスワードが違います");
-        return;
       }
     } else {
       if (confirm("管理者モードをログアウトしますか？")) {
         isAdminLoggedIn = false;
         sessionStorage.removeItem("roirom_admin_logged");
-        const btn = document.getElementById("admin-toggle-btn");
-        btn.textContent = "⚙️ 管理者ログイン";
-        btn.classList.remove("logged-in");
-        document.getElementById("profile-edit-btn").classList.remove("show");
-        document.getElementById("admin-form").style.display = "none";
-        updateStatusFilterPills();
-        render();
+        initApp();
         alert("ログアウトしました");
       }
-      return;
     }
+  }
 
+  function openCreateForm() {
+    resetFormToCreateMode();
     const form = document.getElementById("admin-form");
-    form.style.display = form.style.display === "block" ? "none" : "block";
-    if (form.style.display === "block" && !document.getElementById("edit-item-id").value) resetFormToCreateMode();
+    form.style.display = "block";
+    form.scrollIntoView({ behavior: 'smooth' });
   }
 
   function resetFormToCreateMode() {
@@ -1451,7 +1446,10 @@
     document.getElementById("form-heading-text").textContent = "✏️ スケジュール編集";
     document.getElementById("form-submit-btn").textContent = "更新する";
     document.getElementById("form-cancel-btn").style.display = "block";
-    document.getElementById("admin-form").style.display = "block";
+    
+    const form = document.getElementById("admin-form");
+    form.style.display = "block";
+    form.scrollIntoView({ behavior: 'smooth' });
   }
 
   function renderListView(data, container) {
