@@ -220,15 +220,14 @@
     .cal-cell.is-today { background: #eaeaea !important; border: 2px solid var(--deep-color) !important; }
     .cal-day-num { font-weight: bold; color: #444; margin-bottom: 2px; display: block; }
     
-    /* 1本につながる帯（バー）スタイル */
+    /* 1本につながる帯（バー）スタイル：タイトル全体表示対応 */
     .cal-event-bar { 
       padding: 2px 4px; 
       margin-bottom: 2px; 
       font-size: 8px; 
       font-weight: bold; 
       white-space: nowrap; 
-      overflow: hidden; 
-      text-overflow: ellipsis; 
+      overflow: visible; 
       display: block; 
       border: 1px solid transparent; 
     }
@@ -1496,7 +1495,6 @@
       if (dayEvents.length > 0) {
         cell.classList.add("has-event");
         
-        // 同じイベントが重複して描画されないようにIDでユニークにする
         const uniqueEvents = [];
         const seenIds = new Set();
         dayEvents.forEach(ev => {
@@ -1523,12 +1521,8 @@
 
           evEl.className = `cal-event-bar ${colorClass} ${positionClass}`;
           
-          // バーの途中の日（開始日以外）はテキストを非表示にして1本の綺麗な帯に見せる
-          if (dayStr === start) {
-            evEl.textContent = ev.title;
-          } else {
-            evEl.textContent = " "; // タイトルが重なってはみ出るのを防ぐため空白にする
-          }
+          // どのセルでもタイトルを常時全表示するように変更
+          evEl.textContent = ev.title;
 
           cell.appendChild(evEl);
         });
