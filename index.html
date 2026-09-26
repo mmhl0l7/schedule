@@ -17,9 +17,14 @@
       --tag-bg: #f0f0f0;
       
       /* メンバーカラー */
-      --color-honda: #b8860b;      /* ゴールド */
-      --color-hamakawa: #708090;   /* シルバー */
-      --color-roirom: #1a1a1a;     /* 全体・ROIROM共通 */
+      --color-honda: #b8860b;        /* ゴールド */
+      --color-hamakawa: #708090;     /* シルバー */
+      --color-roirom: #1a1a1a;       /* 全体・ROIROM共通 */
+      
+      /* メンバーカラー（薄いパステル背景用） */
+      --color-honda-light: #fcf8ee;  /* ゴールド系の薄いパステル */
+      --color-hamakawa-light: #f0f4f8;/* シルバー系の薄いパステル */
+      --color-roirom-light: #f0f0f0;  /* 黒系の薄いパステル */
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -142,10 +147,11 @@
     .filter-pill { font-size: 11px; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--border-color); background: #fff; color: #555; cursor: pointer; font-weight: bold; }
     .filter-pill.active { background: var(--deep-color); color: #fff; border-color: var(--deep-color); }
     
-    /* フィルターボタン個別カラー適用 */
-    .filter-pill[data-member="本多大夢"].active { background: var(--color-honda) !important; border-color: var(--color-honda) !important; color: #fff !important; }
-    .filter-pill[data-member="浜川路己"].active { background: var(--color-hamakawa) !important; border-color: var(--color-hamakawa) !important; color: #fff !important; }
-    .filter-pill[data-member="ROIROM"].active { background: var(--color-roirom) !important; border-color: var(--color-roirom) !important; color: #fff !important; }
+    /* フィルターボタン個別カラー適用（枠線はメンカラ、中は薄いパステル、文字は濃い色） */
+    .filter-pill[data-member="本多大夢"].active { background: var(--color-honda-light) !important; border-color: var(--color-honda) !important; color: #856404 !important; }
+    .filter-pill[data-member="浜川路己"].active { background: var(--color-hamakawa-light) !important; border-color: var(--color-hamakawa) !important; color: #343a40 !important; }
+    .filter-pill[data-member="ROIROM"].active { background: var(--color-roirom-light) !important; border-color: var(--color-roirom) !important; color: #111 !important; }
+    .filter-pill[data-member="すべて"].active { background: #222 !important; border-color: #222 !important; color: #fff !important; }
 
     .view-mode-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .view-switch { display: flex; background: #eaeaea; border-radius: 16px; padding: 3px; }
@@ -193,8 +199,8 @@
     
     /* メンバータグ・ステータスタグの配色 */
     .member-tag { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: var(--tag-bg); color: var(--deep-color); border: 1px solid #ddd; font-weight: bold; }
-    .member-tag.tag-honda { background: #fff8dc; color: #856404; border-color: var(--color-honda); }
-    .member-tag.tag-hamakawa { background: #f0f4f8; color: #495057; border-color: var(--color-hamakawa); }
+    .member-tag.tag-honda { background: var(--color-honda-light); color: #856404; border-color: var(--color-honda); }
+    .member-tag.tag-hamakawa { background: var(--color-hamakawa-light); color: #495057; border-color: var(--color-hamakawa); }
     .member-tag.tag-roirom { background: #222; color: #fff; border-color: #222; }
 
     .item-action-icons { display: none; gap: 5px; }
