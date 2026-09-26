@@ -861,7 +861,7 @@
     } else if (currentMainType === "PROGRAM") {
       statuses.push("放送予定", "レギュラー", "ゲスト出演");
     } else if (currentMainType === "EVENT") {
-      statuses.push("LIVE", "ファンミーティング", "チケット受付");
+      statuses.push("LIVE", "イベント", "チケット申込", "お知らせ");
     }
     
     if (isAdminLoggedIn) {
@@ -890,11 +890,11 @@
     } else if (targetType === "PROGRAM") {
       options = ["放送予定", "ゲスト出演", "レギュラー"];
     } else if (targetType === "EVENT") {
-      options = ["LIVE", "ファンミーティング", "チケット受付"];
+      options = ["LIVE", "イベント", "チケット申込", "お知らせ"];
     } else if (targetType === "ANNIVERSARY") {
       options = ["誕生日", "記念日"];
     } else {
-      options = ["予約受付中", "表紙", "発売中", "重版", "LIVE", "ファンミーティング", "チケット受付", "誕生日", "記念日"];
+      options = ["予約受付中", "表紙", "発売中", "重版", "LIVE", "イベント", "チケット申込", "お知らせ", "誕生日", "記念日"];
     }
 
     let selectedArr = Array.isArray(selectedStatuses) ? selectedStatuses : [selectedStatuses];
