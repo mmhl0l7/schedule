@@ -400,6 +400,7 @@
   <div class="type-tabs">
     <button class="type-tab active" id="tab-magazine" onclick="switchMainType('MAGAZINE')">MAGAZINE</button>
     <button class="type-tab" id="tab-program" onclick="switchMainType('PROGRAM')">出演番組</button>
+    <button class="type-tab" id="tab-event" onclick="switchMainType('EVENT')">LIVE・イベント</button>
   </div>
 
   <div class="month-nav-container">
@@ -453,6 +454,7 @@
       <select id="input-type" onchange="onFormTypeChange()">
         <option value="MAGAZINE">MAGAZINE</option>
         <option value="PROGRAM">出演番組</option>
+        <option value="EVENT">LIVE・イベント</option>
         <option value="ANNIVERSARY">🎂 誕生日・記念日</option>
       </select>
     </div>
@@ -815,6 +817,7 @@
     currentStatusFilters = ["すべて"];
     document.getElementById("tab-magazine").classList.toggle("active", type === "MAGAZINE");
     document.getElementById("tab-program").classList.toggle("active", type === "PROGRAM");
+    document.getElementById("tab-event").classList.toggle("active", type === "EVENT");
     
     updateStatusFilterPills();
     if (!document.getElementById("edit-item-id").value) {
@@ -844,6 +847,7 @@
     typeSelect.innerHTML = `
       <option value="MAGAZINE">MAGAZINE</option>
       <option value="PROGRAM">出演番組</option>
+      <option value="EVENT">LIVE・イベント</option>
       <option value="ANNIVERSARY">🎂 誕生日・記念日</option>
     `;
     typeSelect.value = currentVal;
@@ -857,8 +861,14 @@
       statuses.push("予約受付中", "表紙", "発売中", "重版");
     } else if (currentMainType === "PROGRAM") {
       statuses.push("放送予定", "レギュラー", "ゲスト出演");
+    } else if (currentMainType === "EVENT") {
+      statuses.push("LIVE", "ファンミーティング", "チケット受付");
     }
-    statuses.push("誕生日", "記念日");
+    
+    // 誕生日のフィルターは管理者ログイン中のみ追加
+    if (isAdminLoggedIn) {
+      statuses.push("誕生日", "記念日");
+    }
 
     statuses.forEach(st => {
       const btn = document.createElement("button");
@@ -881,10 +891,12 @@
       options = ["予約受付中", "表紙", "発売中", "重版"];
     } else if (targetType === "PROGRAM") {
       options = ["放送予定", "ゲスト出演", "レギュラー"];
+    } else if (targetType === "EVENT") {
+      options = ["LIVE", "ファンミーティング", "チケット受付"];
     } else if (targetType === "ANNIVERSARY") {
       options = ["誕生日", "記念日"];
     } else {
-      options = ["予約受付中", "表紙", "発売中", "重版", "誕生日", "記念日"];
+      options = ["予約受付中", "表紙", "発売中", "重版", "LIVE", "ファンミーティング", "チケット受付", "誕生日", "記念日"];
     }
 
     let selectedArr = Array.isArray(selectedStatuses) ? selectedStatuses : [selectedStatuses];
