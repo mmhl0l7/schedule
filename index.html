@@ -220,17 +220,21 @@
     .cal-cell.is-today { background: #eaeaea !important; border: 2px solid var(--deep-color) !important; }
     .cal-day-num { font-weight: bold; color: #444; margin-bottom: 2px; display: block; }
     
-    /* 1本につながる帯（バー）スタイル：バー全体をまたいで中央付近にタイトルを1つだけ配置 */
+    /* 1本につながる帯（バー）スタイル：高さとサイズを完全に揃える */
     .cal-event-bar { 
       padding: 2px 4px; 
       margin-bottom: 2px; 
       font-size: 8px; 
       font-weight: bold; 
       white-space: nowrap; 
-      overflow: visible; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
       text-align: center;
       display: block; 
       border: 1px solid transparent; 
+      line-height: 12px; /* 高さを揃えるための固定行高 */
+      height: 16px;      /* ボックスの高さを固定 */
+      box-sizing: border-box;
     }
     .cal-event-bar.ev-honda { background: var(--color-honda-light); color: #856404; border-color: var(--color-honda); }
     .cal-event-bar.ev-hamakawa { background: var(--color-hamakawa-light); color: #343a40; border-color: var(--color-hamakawa); }
@@ -1522,7 +1526,6 @@
 
           evEl.className = `cal-event-bar ${colorClass} ${positionClass}`;
           
-          // 【改良】複数日にまたがるバーの場合、全体の「真ん中の日（日数の中央日）」にだけタイトルを1つ表示する
           let startDateObj = new Date(start);
           let endDateObj = new Date(end);
           let currentDateObj = new Date(dayStr);
@@ -1531,14 +1534,12 @@
           let midPoint = Math.floor(totalDuration / 2);
 
           if (start === end) {
-            // 単発の予定ならその日に表示
             evEl.textContent = ev.title;
           } else {
-            // またがる予定なら、真ん中の日にだけタイトルを表示し、他はバー（空白）にする
             if (elapsed === midPoint) {
               evEl.textContent = ev.title;
             } else {
-              evEl.textContent = "";
+              evEl.textContent = "\u00A0"; // 高さを保つためのノーブレークスペース
             }
           }
 
