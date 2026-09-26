@@ -220,7 +220,7 @@
     .cal-cell.is-today { background: #eaeaea !important; border: 2px solid var(--deep-color) !important; }
     .cal-day-num { font-weight: bold; color: #444; margin-bottom: 2px; display: block; }
     
-    /* 1本につながる帯（バー）スタイル：高さとサイズを完全に揃える */
+    /* カレンダーバーのスタイル */
     .cal-event-bar { 
       padding: 2px 4px; 
       margin-bottom: 2px; 
@@ -232,8 +232,8 @@
       text-align: center;
       display: block; 
       border: 1px solid transparent; 
-      line-height: 12px; /* 高さを揃えるための固定行高 */
-      height: 16px;      /* ボックスの高さを固定 */
+      line-height: 12px;
+      height: 16px;
       box-sizing: border-box;
     }
     .cal-event-bar.ev-honda { background: var(--color-honda-light); color: #856404; border-color: var(--color-honda); }
@@ -1286,16 +1286,18 @@
     if (status.length === 0) { alert("ステータスを1つ以上選択してください"); return; }
 
     const parsedLinks = parseLinks(document.getElementById("input-links").value);
+    const hideEnd = (type === "MAGAZINE" || type === "CD発売" || type === "ANNIVERSARY");
+    const finalEndDate = hideEnd ? "" : endDate;
 
     if (editId) {
       const item = itemsData.find(i => i.id == editId);
       if (item) {
-        item.date = date; item.time = time; item.endDate = endDate; item.endTime = endTime; item.title = title; item.desc = desc; item.type = type; item.status = status; item.member = member; item.links = parsedLinks;
+        item.date = date; item.time = time; item.endDate = finalEndDate; item.endTime = endTime; item.title = title; item.desc = desc; item.type = type; item.status = status; item.member = member; item.links = parsedLinks;
       }
       alert("更新しました！");
     } else {
       itemsData.push({ 
-        id: Date.now(), type, date, endDate, time, endTime, title, desc, status, member: member, links: parsedLinks, 
+        id: Date.now(), type, date, endDate: finalEndDate, time, endTime, title, desc, status, member: member, links: parsedLinks, 
         reservations: JSON.parse(JSON.stringify(defaultReservations))
       });
       addNotification(title);
@@ -1493,7 +1495,7 @@
       
       const dayEvents = data.filter(item => {
         let start = item.date;
-        let end = item.endDate ? item.endDate : item.date;
+        let end = (item.endDate && item.endDate.trim() !== "") ? item.endDate : item.date;
         return dayStr >= start && dayStr <= end;
       });
 
@@ -1515,7 +1517,7 @@
           let colorClass = getCalendarEventClass(evMember);
           
           let start = ev.date;
-          let end = ev.endDate ? ev.endDate : ev.date;
+          let end = (ev.endDate && ev.endDate.trim() !== "") ? ev.endDate : ev.date;
           
           let positionClass = "bar-single";
           if (start !== end) {
@@ -1539,7 +1541,7 @@
             if (elapsed === midPoint) {
               evEl.textContent = ev.title;
             } else {
-              evEl.textContent = "\u00A0"; // 高さを保つためのノーブレークスペース
+              evEl.textContent = "\u00A0";
             }
           }
 
