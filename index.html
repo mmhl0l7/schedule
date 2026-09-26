@@ -1169,7 +1169,11 @@
     if (calModal.classList.contains("open") && activeCalendarDateStr) {
       const refreshedEvents = itemsData.filter(item => {
         let itemDate = new Date(item.date);
-        if (itemDate.getFullYear() !== currentYear || itemDate.getMonth() !== currentMonth) return false;
+        let itemEndDate = item.endDate ? new Date(item.endDate) : itemDate;
+        let targetMonthDate = new Date(currentYear, currentMonth, 1);
+        let targetMonthEndDate = new Date(currentYear, currentMonth + 1, 0);
+
+        if (itemEndDate < targetMonthDate || itemDate > targetMonthEndDate) return false;
 
         if (currentViewMode === "calendar") return true;
 
@@ -1185,7 +1189,11 @@
           if (!currentStatusFilters.some(st => itemStatuses.includes(st))) return false;
         }
         return true;
-      }).filter(item => item.date === activeCalendarDateStr);
+      }).filter(item => {
+        let start = item.date;
+        let end = item.endDate || item.date;
+        return activeCalendarDateStr >= start && activeCalendarDateStr <= end;
+      });
 
       openCalendarModal(activeCalendarDateStr, refreshedEvents);
     }
@@ -1256,14 +1264,21 @@
   function filterItems() {
     return itemsData.filter(item => {
       let itemDate = new Date(item.date);
-      if (itemDate.getFullYear() !== currentYear || itemDate.getMonth() !== currentMonth) return false;
+      let itemEndDate = item.endDate ? new Date(item.endDate) : itemDate;
+      let targetMonthDate = new Date(currentYear, currentMonth, 1);
+      let targetMonthEndDate = new Date(currentYear, currentMonth + 1, 0);
 
+      // カレンダー表示の場合は期間が当月に少しでもかかっていれば表示
       if (currentViewMode === "calendar") {
+        if (itemEndDate < targetMonthDate || itemDate > targetMonthEndDate) return false;
         if (!currentMemberFilters.includes("すべて")) {
           if (!currentMemberFilters.includes(item.member || "ROIROM")) return false;
         }
         return true;
       }
+
+      // リスト表示の場合は開始日が当月かどうか
+      if (itemDate.getFullYear() !== currentYear || itemDate.getMonth() !== currentMonth) return false;
 
       let matchesType = false;
       if (currentMainType === "MAGAZINE") {
@@ -1327,6 +1342,8 @@
         if (item.endTime) endStr += `${item.endTime}`;
         if (endStr.trim()) dateTimeText += ` 〜 ${endStr.trim()}`;
       }
+    } else if (item.endDate && item.endDate !== item.date) {
+      dateTimeText += ` 〜 ${item.endDate}`;
     }
 
     let statusTagsHtml = (Array.isArray(item.status) ? item.status : [item.status]).map(st => `<span class="member-tag">${st}</span>`).join(" ");
@@ -1428,7 +1445,13 @@
       cell.appendChild(numEl);
 
       const dayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const dayEvents = data.filter(item => item.date === dayStr);
+      
+      // 期間（開始日〜終了日）にこの日が含まれるイベントを抽出
+      const dayEvents = data.filter(item => {
+        let start = item.date;
+        let end = item.endDate ? item.endDate : item.date;
+        return dayStr >= start && dayStr <= end;
+      });
 
       if (dayEvents.length > 0) {
         cell.classList.add("has-event");
