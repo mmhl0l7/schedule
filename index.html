@@ -133,8 +133,8 @@
     }
     .notification-dot.show { display: inline-block; }
 
-    .type-tabs { display: flex; background: #e0e0e0; border-radius: 24px; padding: 4px; margin-bottom: 12px; }
-    .type-tab { flex: 1; text-align: center; padding: 10px; font-size: 11px; font-weight: bold; color: #555; border-radius: 20px; cursor: pointer; background: transparent; border: none; }
+    .type-tabs { display: flex; background: #e0e0e0; border-radius: 24px; padding: 4px; margin-bottom: 12px; gap: 2px; }
+    .type-tab { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; font-weight: bold; color: #555; border-radius: 20px; cursor: pointer; background: transparent; border: none; white-space: nowrap; }
     .type-tab.active { background: #1a1a1a; color: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
 
     .month-nav-container { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
@@ -220,7 +220,6 @@
     .cal-cell.is-today { background: #eaeaea !important; border: 2px solid var(--deep-color) !important; }
     .cal-day-num { font-weight: bold; color: #444; margin-bottom: 2px; display: block; }
     
-    /* カレンダー内のイベントバッジ個別色（薄いパステル背景＆枠線＋濃い文字色） */
     .cal-event-title { padding: 1px 4px; border-radius: 4px; margin-bottom: 2px; font-size: 8px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; border: 1px solid transparent; }
     .cal-event-title.ev-honda { background: var(--color-honda-light); color: #856404; border-color: var(--color-honda); }
     .cal-event-title.ev-hamakawa { background: var(--color-hamakawa-light); color: #343a40; border-color: var(--color-hamakawa); }
@@ -865,7 +864,6 @@
       statuses.push("LIVE", "ファンミーティング", "チケット受付");
     }
     
-    // 誕生日のフィルターは管理者ログイン中のみ追加
     if (isAdminLoggedIn) {
       statuses.push("誕生日", "記念日");
     }
