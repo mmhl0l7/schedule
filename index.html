@@ -34,6 +34,33 @@
       margin-bottom: 20px;
     }
 
+    /* 予定登録フォームエリア */
+    .form-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .form-card input, .form-card select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .btn-primary {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
     /* メディア出演スケジュールカード（トリガー用） */
     .schedule-trigger-card {
       background: var(--card-bg);
@@ -43,6 +70,7 @@
       text-align: center;
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 12px;
       transition: transform 0.1s;
     }
 
@@ -179,9 +207,6 @@
       padding: 6px 14px;
       font-size: 0.85rem;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
 
     .btn-tver {
@@ -228,19 +253,16 @@
       display: block;
     }
 
-    /* セクションブロック */
     .section-title {
       font-size: 0.9rem;
       font-weight: bold;
       margin-bottom: 8px;
-      color: var(--text-main);
     }
 
     .sub-section {
       margin-bottom: 16px;
     }
 
-    /* サブスクボタン */
     .btn-fod {
       background: #1a1a1a;
       color: #ff3b30;
@@ -255,7 +277,6 @@
       font-size: 0.95rem;
     }
 
-    /* SNSリンクチップ */
     .sns-chips {
       display: flex;
       flex-wrap: wrap;
@@ -271,12 +292,8 @@
       cursor: pointer;
       color: var(--text-main);
       text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
     }
 
-    /* ハッシュタグチップ */
     .hashtag-chips {
       display: flex;
       flex-wrap: wrap;
@@ -305,14 +322,13 @@
       margin-bottom: 8px;
     }
 
-    /* シェアボタン群 */
     .share-buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
 
-    .btn-share-x {
+    .btn-share-x, .btn-share-threads {
       background: #000;
       color: #fff;
       border: none;
@@ -323,18 +339,7 @@
       cursor: pointer;
       text-align: center;
     }
-
-    .btn-share-threads {
-      background: #111;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 12px;
-      font-weight: bold;
-      font-size: 0.9rem;
-      cursor: pointer;
-      text-align: center;
-    }
+    .btn-share-threads { background: #111; }
   </style>
 </head>
 <body>
@@ -342,75 +347,152 @@
 <div class="container">
   <h1>ROIROM メディア出演スケジュール</h1>
 
-  <!-- カレンダーの予定日を模したカード -->
-  <div class="schedule-trigger-card" onclick="openModal()">
-    <div class="date-label">2026年9月17日(木)</div>
-    <div class="hint-text">📅 タップして詳細を見る</div>
+  <!-- 予定の簡易登録フォーム -->
+  <div class="form-card">
+    <h3 style="font-size: 0.95rem; margin-top:0;">予定を追加する</h3>
+    <input type="text" id="inputDate" placeholder="日付 (例: 2026年9月18日(金))" value="2026年9月17日(木)">
+    <input type="text" id="inputTitle" placeholder="番組名 (例: ラストノート #10)" value="ラストノート #10 (再)">
+    <input type="text" id="inputTime" placeholder="時間・ジャンル (例: 02:55 テレビ)" value="02:55 テレビ">
+    <button class="btn-primary" onclick="addNewSchedule()">予定を登録する</button>
   </div>
+
+  <!-- スケジュール一覧が表示されるコンテナ -->
+  <div id="scheduleListContainer"></div>
 </div>
 
 <!-- モーダル（ボトムシート） -->
 <div id="scheduleModal" class="modal-overlay" onclick="handleOutsideClick(event)">
   <div class="modal-content">
-    
     <div class="modal-header">
-      <h2 id="modalDateTitle">2026年9月17日(木)</h2>
+      <h2 id="modalDateTitle">日付</h2>
       <button class="close-btn" onclick="closeModal()">&times;</button>
     </div>
+    <div class="modal-body-inner" id="modalBodyContent">
+      <!-- 動的に詳細が挿入されます -->
+    </div>
+  </div>
+</div>
 
-    <div class="modal-body-inner">
-      <!-- メディア詳細カード -->
+<script>
+  // 初期データ（LocalStorageにない場合に使用）
+  const defaultSchedules = [
+    {
+      id: 1,
+      date: "2026年9月17日(木)",
+      time: "02:55 テレビ",
+      title: "ラストノート #10 (再)",
+      member: "寺西",
+      tver: true,
+      fod: true
+    }
+  ];
+
+  // ローカルストレージからデータを取得、なければデフォルトを使用
+  function getSchedules() {
+    const saved = localStorage.getItem('roirom_schedules');
+    return saved ? JSON.parse(saved) : defaultSchedules;
+  }
+
+  // ローカルストレージに保存
+  function saveSchedules(schedules) {
+    localStorage.setItem('roirom_schedules', JSON.stringify(schedules));
+    renderScheduleCards();
+  }
+
+  // 画面にスケジュールカードを描画
+  function renderScheduleCards() {
+    const container = document.getElementById('scheduleListContainer');
+    const schedules = getSchedules();
+    
+    container.innerHTML = '';
+    schedules.forEach(item => {
+      container.innerHTML += `
+        <div class="schedule-trigger-card" onclick="openModal(${item.id})">
+          <div class="date-label">${item.date}</div>
+          <div class="hint-text">📅 ${item.title} (${item.time}) - タップして詳細</div>
+        </div>
+      `;
+    });
+  }
+
+  // 新規予定追加
+  function addNewSchedule() {
+    const date = document.getElementById('inputDate').value;
+    const title = document.getElementById('inputTitle').value;
+    const time = document.getElementById('inputTime').value;
+
+    if (!date || !title) {
+      alert("日付と番組名を入力してください");
+      return;
+    }
+
+    const schedules = getSchedules();
+    const newId = schedules.length > 0 ? Math.max(...schedules.map(s => s.id)) + 1 : 1;
+    
+    schedules.push({
+      id: newId,
+      date: date,
+      time: time,
+      title: title,
+      member: "寺西拓人",
+      tver: true,
+      fod: true
+    });
+
+    saveSchedules(schedules);
+    alert("予定を登録しました！更新しても消えません。");
+  }
+
+  // モーダルを開いて詳細を表示
+  function openModal(id) {
+    const schedules = getSchedules();
+    const item = schedules.find(s => s.id === id);
+    if (!item) return;
+
+    document.getElementById('modalDateTitle').textContent = item.date;
+    
+    document.getElementById('modalBodyContent').innerHTML = `
       <div class="media-detail-card">
         <div class="media-info-row">
           <div class="media-icon-title">
             <div class="thumb-icon">📺</div>
             <div>
-              <div class="time-category">02:55 テレビ</div>
-              <h3 class="program-title">ラストノート #10 (再)</h3>
+              <div class="time-category">${item.time}</div>
+              <h3 class="program-title">${item.title}</h3>
             </div>
           </div>
         </div>
 
-        <!-- メンバーバッジ -->
         <div>
-          <span class="badge-member">寺西</span>
+          <span class="badge-member">${item.member}</span>
         </div>
 
         <div class="action-buttons-top" style="margin-bottom: 12px;">
           <button class="btn-outline"><span>🔗</span> シェア</button>
           <button class="btn-outline"><span>⚪</span> 番組予約</button>
-          <button class="btn-tver">TVer</button>
+          ${item.tver ? '<button class="btn-tver">TVer</button>' : ''}
         </div>
 
-        <!-- アコーディオン開閉部分 -->
         <div class="accordion-toggle" id="accordionToggleBtn" onclick="toggleAccordion()">
           ▼ タップで詳細
         </div>
 
-        <!-- 開閉の中身 -->
         <div class="accordion-body" id="accordionBody">
-          
-          <!-- サブスクで見る -->
+          ${item.fod ? `
           <div class="sub-section">
             <div class="section-title">サブスクで見る</div>
-            <button class="btn-fod" onclick="window.open('#', '_blank')">
-              FOD ↗
-            </button>
-          </div>
+            <button class="btn-fod" onclick="window.open('#', '_blank')">FOD ↗</button>
+          </div>` : ''}
 
-          <!-- 公式SNS -->
           <div class="sub-section">
             <div class="section-title">公式SNS</div>
             <div class="sns-chips">
               <a href="#" class="sns-chip" target="_blank">フジテレビYouTube ↗</a>
               <a href="#" class="sns-chip" target="_blank">公式サイト ↗</a>
               <a href="#" class="sns-chip" target="_blank">公式X ↗</a>
-              <a href="#" class="sns-chip" target="_blank">公式TikTok ↗</a>
-              <a href="#" class="sns-chip" target="_blank">公式Instagram ↗</a>
             </div>
           </div>
 
-          <!-- ハッシュタグ -->
           <div class="sub-section">
             <div class="section-title">ハッシュタグ</div>
             <div class="helper-text">シェアしたいハッシュタグを選んでください（複数選択可）</div>
@@ -420,71 +502,52 @@
             </div>
           </div>
 
-          <!-- シェアボタン -->
           <div class="share-buttons">
-            <button class="btn-share-x" onclick="shareToSNS('x')">𝕏 Xにシェア</button>
-            <button class="btn-share-threads" onclick="shareToSNS('threads')">Threadsにシェア</button>
+            <button class="btn-share-x" onclick="shareToSNS('${item.title}')">𝕏 Xにシェア</button>
+            <button class="btn-share-threads" onclick="shareToSNS('${item.title}')">Threadsにシェア</button>
           </div>
+        </div>
+      </div>
+    `;
 
-        </div><!-- /accordion-body -->
-
-      </div><!-- /media-detail-card -->
-
-    </div>
-  </div>
-</div>
-
-<script>
-  // モーダルを開く
-  function openModal() {
     document.getElementById('scheduleModal').classList.add('active');
-    document.body.style.overflow = 'hidden'; // 背景スクロール固定
+    document.body.style.overflow = 'hidden';
   }
 
-  // モーダルを閉じる
   function closeModal() {
     document.getElementById('scheduleModal').classList.remove('active');
     document.body.style.overflow = 'auto';
   }
 
-  // 背景クリックで閉じる
   function handleOutsideClick(event) {
     if (event.target.id === 'scheduleModal') {
       closeModal();
     }
   }
 
-  // アコーディオンの開閉切替
   function toggleAccordion() {
     const body = document.getElementById('accordionBody');
     const btn = document.getElementById('accordionToggleBtn');
-    
     body.classList.toggle('open');
-    if (body.classList.contains('open')) {
-      btn.textContent = '▲ タップで閉じる';
-    } else {
-      btn.textContent = '▼ タップで詳細';
-    }
+    btn.textContent = body.classList.contains('open') ? '▲ タップで閉じる' : '▼ タップで詳細';
   }
 
-  // ハッシュタグの選択・解除
   function toggleHashtag(element) {
     element.classList.toggle('selected');
   }
 
-  // シェア機能のモック
-  function shareToSNS(platform) {
+  function shareToSNS(title) {
     const selectedTags = Array.from(document.querySelectorAll('.hashtag-chip.selected'))
                               .map(tag => tag.textContent)
                               .join(' ');
-    const text = `ラストノート #10 (再) 02:55 放送！ ${selectedTags}`;
-    
-    if (platform === 'x') {
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-    } else if (platform === 'threads') {
-      alert(`Threads共有用テキスト:\n${text}`);
-    }
+    const text = `${title} 放送！ ${selectedTags}`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   }
+
+  // 初回ロード時にリストを描画
+  window.onload = function() {
+    renderScheduleCards();
+  };
 </script>
 
 </body>
