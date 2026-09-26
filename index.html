@@ -147,7 +147,6 @@
     .filter-pill { font-size: 11px; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--border-color); background: #fff; color: #555; cursor: pointer; font-weight: bold; }
     .filter-pill.active { background: var(--deep-color); color: #fff; border-color: var(--deep-color); }
     
-    /* フィルターボタン個別カラー適用（枠線はメンカラ、中は薄いパステル、文字は濃い色） */
     .filter-pill[data-member="本多大夢"].active { background: var(--color-honda-light) !important; border-color: var(--color-honda) !important; color: #856404 !important; }
     .filter-pill[data-member="浜川路己"].active { background: var(--color-hamakawa-light) !important; border-color: var(--color-hamakawa) !important; color: #343a40 !important; }
     .filter-pill[data-member="ROIROM"].active { background: var(--color-roirom-light) !important; border-color: var(--color-roirom) !important; color: #111 !important; }
@@ -197,11 +196,10 @@
     .item-footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border-color); }
     .badges-left { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
     
-    /* メンバータグ・ステータスタグの配色 */
     .member-tag { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: var(--tag-bg); color: var(--deep-color); border: 1px solid #ddd; font-weight: bold; }
     .member-tag.tag-honda { background: var(--color-honda-light); color: #856404; border-color: var(--color-honda); }
     .member-tag.tag-hamakawa { background: var(--color-hamakawa-light); color: #495057; border-color: var(--color-hamakawa); }
-    .member-tag.tag-roirom { background: #222; color: #fff; border-color: #222; }
+    .member-tag.tag-roirom { background: var(--color-roirom-light); color: #111; border-color: var(--color-roirom); }
 
     .item-action-icons { display: none; gap: 5px; }
     .item-action-icons.show { display: flex; }
@@ -221,12 +219,12 @@
     .cal-cell.has-event { background: #f4f4f4; border-color: #bbb; }
     .cal-cell.is-today { background: #eaeaea !important; border: 2px solid var(--deep-color) !important; }
     .cal-day-num { font-weight: bold; color: #444; margin-bottom: 2px; display: block; }
-    .cal-event-title { background: var(--main-color); color: #fff; padding: 1px 3px; border-radius: 3px; margin-bottom: 2px; font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
     
-    /* カレンダー内のイベントバッジ個別色 */
-    .cal-event-title.ev-honda { background: var(--color-honda); color: #fff; }
-    .cal-event-title.ev-hamakawa { background: var(--color-hamakawa); color: #fff; }
-    .cal-event-title.ev-roirom { background: var(--color-roirom); color: #fff; }
+    /* カレンダー内のイベントバッジ個別色（薄いパステル背景＆枠線＋濃い文字色） */
+    .cal-event-title { padding: 1px 4px; border-radius: 4px; margin-bottom: 2px; font-size: 8px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; border: 1px solid transparent; }
+    .cal-event-title.ev-honda { background: var(--color-honda-light); color: #856404; border-color: var(--color-honda); }
+    .cal-event-title.ev-hamakawa { background: var(--color-hamakawa-light); color: #343a40; border-color: var(--color-hamakawa); }
+    .cal-event-title.ev-roirom { background: var(--color-roirom-light); color: #111; border-color: var(--color-roirom); }
 
     .no-data { text-align: center; color: #888; font-size: 12px; padding: 20px; background: #fff; border-radius: 12px; }
 
@@ -846,11 +844,9 @@
     typeSelect.innerHTML = `
       <option value="MAGAZINE">MAGAZINE</option>
       <option value="PROGRAM">出演番組</option>
+      <option value="ANNIVERSARY">🎂 誕生日・記念日</option>
     `;
-    if (isAdminLoggedIn) {
-      typeSelect.innerHTML += `<option value="ANNIVERSARY">🎂 誕生日・記念日</option>`;
-    }
-    typeSelect.value = (currentVal === "ANNIVERSARY" && !isAdminLoggedIn) ? "MAGAZINE" : currentVal;
+    typeSelect.value = currentVal;
   }
 
   function updateStatusFilterPills() {
@@ -862,9 +858,7 @@
     } else if (currentMainType === "PROGRAM") {
       statuses.push("放送予定", "レギュラー", "ゲスト出演");
     }
-    if (isAdminLoggedIn) {
-      statuses.push("誕生日", "記念日");
-    }
+    statuses.push("誕生日", "記念日");
 
     statuses.forEach(st => {
       const btn = document.createElement("button");
@@ -887,11 +881,10 @@
       options = ["予約受付中", "表紙", "発売中", "重版"];
     } else if (targetType === "PROGRAM") {
       options = ["放送予定", "ゲスト出演", "レギュラー"];
+    } else if (targetType === "ANNIVERSARY") {
+      options = ["誕生日", "記念日"];
     } else {
-      options = [];
-    }
-    if (isAdminLoggedIn) {
-      options.push("誕生日", "記念日");
+      options = ["予約受付中", "表紙", "発売中", "重版", "誕生日", "記念日"];
     }
 
     let selectedArr = Array.isArray(selectedStatuses) ? selectedStatuses : [selectedStatuses];
@@ -1120,11 +1113,13 @@
     const calModal = document.getElementById("cal-modal");
     if (calModal.classList.contains("open") && activeCalendarDateStr) {
       const refreshedEvents = itemsData.filter(item => {
-        let matchesType = (item.type === currentMainType || item.type === "ANNIVERSARY");
-        if (!matchesType) return false;
-
         let itemDate = new Date(item.date);
         if (itemDate.getFullYear() !== currentYear || itemDate.getMonth() !== currentMonth) return false;
+
+        if (currentViewMode === "calendar") return true;
+
+        let matchesType = (item.type === currentMainType || item.type === "ANNIVERSARY");
+        if (!matchesType) return false;
 
         if (!currentMemberFilters.includes("すべて")) {
           if (!currentMemberFilters.includes(item.member || "ROIROM")) return false;
@@ -1202,11 +1197,18 @@
 
   function filterItems() {
     return itemsData.filter(item => {
-      let matchesType = (item.type === currentMainType || (isAdminLoggedIn && item.type === "ANNIVERSARY"));
-      if (!matchesType) return false;
-
       let itemDate = new Date(item.date);
       if (itemDate.getFullYear() !== currentYear || itemDate.getMonth() !== currentMonth) return false;
+
+      if (currentViewMode === "calendar") {
+        if (!currentMemberFilters.includes("すべて")) {
+          if (!currentMemberFilters.includes(item.member || "ROIROM")) return false;
+        }
+        return true;
+      }
+
+      let matchesType = (item.type === currentMainType || item.type === "ANNIVERSARY");
+      if (!matchesType) return false;
 
       if (!currentMemberFilters.includes("すべて")) {
         if (!currentMemberFilters.includes(item.member || "ROIROM")) return false;
