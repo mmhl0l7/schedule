@@ -397,7 +397,7 @@
   </div>
 
   <div class="type-tabs">
-    <button class="type-tab active" id="tab-magazine" onclick="switchMainType('MAGAZINE')">MAGAZINE</button>
+    <button class="type-tab active" id="tab-magazine" onclick="switchMainType('MAGAZINE')">MAGAZINE / CD</button>
     <button class="type-tab" id="tab-program" onclick="switchMainType('PROGRAM')">出演番組</button>
     <button class="type-tab" id="tab-event" onclick="switchMainType('EVENT')">LIVE・イベント</button>
   </div>
@@ -451,7 +451,7 @@
     <div class="form-group">
       <label>カテゴリ</label>
       <select id="input-type" onchange="onFormTypeChange()">
-        <option value="MAGAZINE">MAGAZINE</option>
+        <option value="MAGAZINE">MAGAZINE / CD</option>
         <option value="PROGRAM">出演番組</option>
         <option value="EVENT">LIVE・イベント</option>
         <option value="ANNIVERSARY">🎂 誕生日・記念日</option>
@@ -835,8 +835,10 @@
   function updateFormVisibilityBytype() {
     const typeSelect = document.getElementById("input-type");
     const targetType = typeSelect ? typeSelect.value : currentMainType;
-    document.getElementById("group-time").style.display = targetType === "MAGAZINE" || targetType === "ANNIVERSARY" ? "none" : "block";
-    document.getElementById("group-end-date").style.display = targetType === "MAGAZINE" || targetType === "ANNIVERSARY" ? "none" : "block";
+    // MAGAZINEまたはCD発売、ANNIVERSARYの時は時間と終了日を非表示
+    const hideTimeAndEnd = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY");
+    document.getElementById("group-time").style.display = hideTimeAndEnd ? "none" : "block";
+    document.getElementById("group-end-date").style.display = hideTimeAndEnd ? "none" : "block";
   }
 
   function updateFormTypeOptions() {
@@ -844,7 +846,8 @@
     if (!typeSelect) return;
     const currentVal = typeSelect.value;
     typeSelect.innerHTML = `
-      <option value="MAGAZINE">MAGAZINE</option>
+      <option value="MAGAZINE">MAGAZINE (雑誌)</option>
+      <option value="CD発売">CD発売</option>
       <option value="PROGRAM">出演番組</option>
       <option value="EVENT">LIVE・イベント</option>
       <option value="ANNIVERSARY">🎂 誕生日・記念日</option>
@@ -857,7 +860,7 @@
     container.innerHTML = "";
     let statuses = ["すべて"];
     if (currentMainType === "MAGAZINE") {
-      statuses.push("予約受付中", "表紙", "発売中", "重版");
+      statuses.push("予約受付中", "表紙", "発売中", "重版", "CD発売", "CD予約中");
     } else if (currentMainType === "PROGRAM") {
       statuses.push("放送予定", "レギュラー", "ゲスト出演");
     } else if (currentMainType === "EVENT") {
@@ -887,6 +890,8 @@
     let options = [];
     if (targetType === "MAGAZINE") {
       options = ["予約受付中", "表紙", "発売中", "重版"];
+    } else if (targetType === "CD発売") {
+      options = ["CD予約中", "CD発売中", "特典付き"];
     } else if (targetType === "PROGRAM") {
       options = ["放送予定", "ゲスト出演", "レギュラー"];
     } else if (targetType === "EVENT") {
@@ -894,7 +899,7 @@
     } else if (targetType === "ANNIVERSARY") {
       options = ["誕生日", "記念日"];
     } else {
-      options = ["予約受付中", "表紙", "発売中", "重版", "LIVE", "イベント", "チケット申込", "お知らせ", "誕生日", "記念日"];
+      options = ["予約受付中", "表紙", "発売中", "重版", "CD予約中", "CD発売中", "特典付き", "LIVE", "イベント", "チケット申込", "お知らせ", "誕生日", "記念日"];
     }
 
     let selectedArr = Array.isArray(selectedStatuses) ? selectedStatuses : [selectedStatuses];
@@ -1128,7 +1133,7 @@
 
         if (currentViewMode === "calendar") return true;
 
-        let matchesType = (item.type === currentMainType || item.type === "ANNIVERSARY");
+        let matchesType = (currentMainType === "MAGAZINE" ? (item.type === "MAGAZINE" || item.type === "CD発売") : (item.type === currentMainType)) || (item.type === "ANNIVERSARY");
         if (!matchesType) return false;
 
         if (!currentMemberFilters.includes("すべて")) {
@@ -1217,7 +1222,13 @@
         return true;
       }
 
-      let matchesType = (item.type === currentMainType || item.type === "ANNIVERSARY");
+      // MAGAZINEタブのときは「MAGAZINE」と「CD発売」の両方を表示対象にする
+      let matchesType = false;
+      if (currentMainType === "MAGAZINE") {
+        matchesType = (item.type === "MAGAZINE" || item.type === "CD発売" || item.type === "ANNIVERSARY");
+      } else {
+        matchesType = (item.type === currentMainType || item.type === "ANNIVERSARY");
+      }
       if (!matchesType) return false;
 
       if (!currentMemberFilters.includes("すべて")) {
@@ -1260,6 +1271,12 @@
     let purchaseText = checkedCount > 0 ? `✓ 完了/済 (${checkedCount})` : "○ 予約/購入管理";
     let purchaseClass = checkedCount > 0 ? "purchase-status-badge done" : "purchase-status-badge";
     
+    // MAGAZINEまたはCD発売の時のみ予約ボタンを表示
+    let purchaseButtonHtml = "";
+    if (item.type === "MAGAZINE" || item.type === "CD発売") {
+      purchaseButtonHtml = `<button class="${purchaseClass}" onclick="event.stopPropagation(); openManageModal(${item.id})">${purchaseText}</button>`;
+    }
+    
     let statusTagsHtml = (Array.isArray(item.status) ? item.status : [item.status]).map(st => `<span class="member-tag">${st}</span>`).join(" ");
     let linksHtml = (item.links || []).map(l => `<a href="${l.url}" target="_blank" class="item-link-chip" onclick="event.stopPropagation()">${l.name}</a>`).join(" ");
     let itemMember = item.member || "ROIROM";
@@ -1270,7 +1287,7 @@
         <div class="item-summary-bar" onclick="toggleItemDetail(${item.id})">
           <div class="item-header-row">
             <div class="item-date-text">📅 ${item.date}</div>
-            <button class="${purchaseClass}" onclick="event.stopPropagation(); openManageModal(${item.id})">${purchaseText}</button>
+            ${purchaseButtonHtml}
           </div>
           <div class="item-title">${item.title} ▼</div>
         </div>
