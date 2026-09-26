@@ -432,9 +432,18 @@
     <div style="font-size: 13px; font-weight: bold; color: var(--deep-color); margin-bottom: 8px;" id="form-heading-text">📖 スケジュール追加</div>
     <input type="hidden" id="edit-item-id" value="">
     
-    <div class="form-group"><label>日付</label><input type="date" id="input-date"></div>
-    <div class="form-group" id="group-end-date"><label>終了日</label><input type="date" id="input-end-date"></div>
-    <div class="form-group" id="group-time"><label>時間</label><input type="time" id="input-time" value="20:00"></div>
+    <div class="form-group">
+      <label>開始（日付と時間）</label>
+      <div style="display: flex; gap: 6px;">
+        <input type="date" id="input-date" style="flex: 2;">
+        <input type="time" id="input-time" value="20:00" style="flex: 1;">
+      </div>
+    </div>
+    
+    <div class="form-group" id="group-end-date">
+      <label>終了日（省略可）</label><input type="date" id="input-end-date">
+    </div>
+
     <div class="form-group"><label>タイトル</label><input type="text" id="input-title" placeholder="タイトルを入力"></div>
     <div class="form-group">
       <label>内容詳細（省略可）</label>
@@ -863,8 +872,7 @@
     const typeSelect = document.getElementById("input-type");
     const targetType = typeSelect ? typeSelect.value : currentMainType;
     const hideTimeAndEnd = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY");
-    document.getElementById("group-time").style.display = hideTimeAndEnd ? "none" : "block";
-    document.getElementById("group-end-date").style.display = hideTimeAndEnd ? "none" : "block";
+    document.getElementById("group-end-date").style.display = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY") ? "none" : "block";
   }
 
   function updateFormTypeOptions() {
@@ -872,8 +880,7 @@
     if (!typeSelect) return;
     const currentVal = typeSelect.value;
     typeSelect.innerHTML = `
-      <option value="MAGAZINE">MAGAZINE (雑誌)</option>
-      <option value="CD発売">CD発売</option>
+      <option value="MAGAZINE">MAGAZINE / CD</option>
       <option value="PROGRAM">出演番組</option>
       <option value="EVENT">LIVE・イベント</option>
       <option value="ANNIVERSARY">🎂 誕生日・記念日</option>
@@ -1040,6 +1047,7 @@
     document.getElementById("form-submit-btn").textContent = "登録する";
     document.getElementById("form-cancel-btn").style.display = "none";
     document.getElementById("input-date").value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+    document.getElementById("input-time").value = "20:00";
     document.getElementById("input-title").value = "";
     document.getElementById("input-desc").value = "";
     document.getElementById("input-member").value = "ROIROM";
@@ -1204,6 +1212,7 @@
   function saveItemData() {
     const editId = document.getElementById("edit-item-id").value;
     const date = document.getElementById("input-date").value;
+    const time = document.getElementById("input-time").value;
     const type = document.getElementById("input-type").value;
     const title = document.getElementById("input-title").value;
     const desc = document.getElementById("input-desc").value;
@@ -1218,12 +1227,12 @@
     if (editId) {
       const item = itemsData.find(i => i.id == editId);
       if (item) {
-        item.date = date; item.title = title; item.desc = desc; item.type = type; item.status = status; item.member = member; item.links = parsedLinks;
+        item.date = date; item.time = time; item.title = title; item.desc = desc; item.type = type; item.status = status; item.member = member; item.links = parsedLinks;
       }
       alert("更新しました！");
     } else {
       itemsData.push({ 
-        id: Date.now(), type, date, endDate: "", time: "20:00", title, desc, status, member: member, links: parsedLinks, 
+        id: Date.now(), type, date, endDate: "", time: time, title, desc, status, member: member, links: parsedLinks, 
         reservations: JSON.parse(JSON.stringify(defaultReservations))
       });
       addNotification(title);
@@ -1301,6 +1310,11 @@
       purchaseButtonHtml = `<button class="${purchaseClass}" onclick="event.stopPropagation(); openManageModal(${item.id})">${purchaseText}</button>`;
     }
     
+    let dateTimeText = `📅 ${item.date}`;
+    if (item.time && item.type !== "MAGAZINE" && item.type !== "CD発売" && item.type !== "ANNIVERSARY") {
+      dateTimeText += ` 🕒 ${item.time}`;
+    }
+
     let statusTagsHtml = (Array.isArray(item.status) ? item.status : [item.status]).map(st => `<span class="member-tag">${st}</span>`).join(" ");
     let linksHtml = (item.links || []).map(l => `<a href="${l.url}" target="_blank" class="item-link-chip" onclick="event.stopPropagation()">${l.name}</a>`).join(" ");
     let itemMember = item.member || "ROIROM";
@@ -1310,7 +1324,7 @@
       <div class="item-card">
         <div class="item-summary-bar" onclick="toggleItemDetail(${item.id})">
           <div class="item-header-row">
-            <div class="item-date-text">📅 ${item.date}</div>
+            <div class="item-date-text">${dateTimeText}</div>
             ${purchaseButtonHtml}
           </div>
           <div class="item-title">${item.title} ▼</div>
@@ -1340,6 +1354,7 @@
 
     document.getElementById("edit-item-id").value = item.id;
     document.getElementById("input-date").value = item.date;
+    document.getElementById("input-time").value = item.time || "20:00";
     document.getElementById("input-title").value = item.title;
     document.getElementById("input-desc").value = item.desc || "";
     document.getElementById("input-member").value = item.member || "ROIROM";
