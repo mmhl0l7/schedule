@@ -907,10 +907,7 @@
     const targetType = typeSelect ? typeSelect.value : currentMainType;
     const isMagazineOrCd = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY");
     
-    // 終了日項目を切り替え
     document.getElementById("group-end").style.display = isMagazineOrCd ? "none" : "block";
-    
-    // 時間設定の表示切り替え（MAGAZINE等の場合は時間を隠し、番組やイベントなら表示する）
     document.getElementById("input-time").style.display = isMagazineOrCd ? "none" : "block";
     document.getElementById("input-end-time").style.display = isMagazineOrCd ? "none" : "block";
     document.getElementById("label-start-text").textContent = isMagazineOrCd ? "日付" : "開始（日付と時間）";
@@ -1228,9 +1225,12 @@
 
         if (itemEndDate < targetMonthDate || itemDate > targetMonthEndDate) return false;
 
-        if (currentViewMode === "calendar") return true;
-
-        let matchesType = (currentMainType === "MAGAZINE" ? (item.type === "MAGAZINE" || item.type === "CD発売") : (item.type === currentMainType)) || (item.type === "ANNIVERSARY");
+        let matchesType = false;
+        if (currentMainType === "MAGAZINE") {
+          matchesType = (item.type === "MAGAZINE" || item.type === "CD発売" || item.type === "ANNIVERSARY");
+        } else {
+          matchesType = (item.type === currentMainType || item.type === "ANNIVERSARY");
+        }
         if (!matchesType) return false;
 
         if (!currentMemberFilters.includes("すべて")) {
@@ -1325,15 +1325,7 @@
       let targetMonthDate = new Date(currentYear, currentMonth, 1);
       let targetMonthEndDate = new Date(currentYear, currentMonth + 1, 0);
 
-      if (currentViewMode === "calendar") {
-        if (itemEndDate < targetMonthDate || itemDate > targetMonthEndDate) return false;
-        if (!currentMemberFilters.includes("すべて")) {
-          if (!currentMemberFilters.includes(item.member || "ROIROM")) return false;
-        }
-        return true;
-      }
-
-      if (itemDate.getFullYear() !== currentYear || itemDate.getMonth() !== currentMonth) return false;
+      if (itemEndDate < targetMonthDate || itemDate > targetMonthEndDate) return false;
 
       let matchesType = false;
       if (currentMainType === "MAGAZINE") {
@@ -1345,6 +1337,10 @@
 
       if (!currentMemberFilters.includes("すべて")) {
         if (!currentMemberFilters.includes(item.member || "ROIROM")) return false;
+      }
+
+      if (currentViewMode === "calendar") {
+        return true;
       }
 
       if (!currentStatusFilters.includes("すべて")) {
