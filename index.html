@@ -432,7 +432,7 @@
     <div style="font-size: 13px; font-weight: bold; color: var(--deep-color); margin-bottom: 8px;" id="form-heading-text">📖 スケジュール追加</div>
     <input type="hidden" id="edit-item-id" value="">
     
-    <div class="form-group">
+    <div class="form-group" id="group-start">
       <label>開始（日付と時間）</label>
       <div style="display: flex; gap: 6px;">
         <input type="date" id="input-date" style="flex: 2;">
@@ -440,8 +440,12 @@
       </div>
     </div>
     
-    <div class="form-group" id="group-end-date">
-      <label>終了日（省略可）</label><input type="date" id="input-end-date">
+    <div class="form-group" id="group-end">
+      <label>終了（日付と時間）</label>
+      <div style="display: flex; gap: 6px;">
+        <input type="date" id="input-end-date" style="flex: 2;">
+        <input type="time" id="input-end-time" value="21:00" style="flex: 1;">
+      </div>
     </div>
 
     <div class="form-group"><label>タイトル</label><input type="text" id="input-title" placeholder="タイトルを入力"></div>
@@ -604,7 +608,7 @@
   if (itemsData.length === 0) {
     itemsData = [
       { 
-        id: 1, type: "MAGAZINE", date: "2026-10-01", endDate: "", time: "", title: "ViVi 12月号 (表紙)", desc: "ROIROM揃っての表紙登場！", status: ["予約受付中", "表紙"], member: "ROIROM", 
+        id: 1, type: "MAGAZINE", date: "2026-10-01", endDate: "", time: "", endTime: "", title: "ViVi 12月号 (表紙)", desc: "ROIROM揃っての表紙登場！", status: ["予約受付中", "表紙"], member: "ROIROM", 
         links: [{name: "Amazon", url: "https://amazon.co.jp"}], 
         reservations: JSON.parse(JSON.stringify(defaultReservations))
       }
@@ -871,8 +875,8 @@
   function updateFormVisibilityBytype() {
     const typeSelect = document.getElementById("input-type");
     const targetType = typeSelect ? typeSelect.value : currentMainType;
-    const hideTimeAndEnd = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY");
-    document.getElementById("group-end-date").style.display = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY") ? "none" : "block";
+    const hideEnd = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY");
+    document.getElementById("group-end").style.display = hideEnd ? "none" : "block";
   }
 
   function updateFormTypeOptions() {
@@ -1048,6 +1052,8 @@
     document.getElementById("form-cancel-btn").style.display = "none";
     document.getElementById("input-date").value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
     document.getElementById("input-time").value = "20:00";
+    document.getElementById("input-end-date").value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+    document.getElementById("input-end-time").value = "21:00";
     document.getElementById("input-title").value = "";
     document.getElementById("input-desc").value = "";
     document.getElementById("input-member").value = "ROIROM";
@@ -1213,6 +1219,8 @@
     const editId = document.getElementById("edit-item-id").value;
     const date = document.getElementById("input-date").value;
     const time = document.getElementById("input-time").value;
+    const endDate = document.getElementById("input-end-date").value;
+    const endTime = document.getElementById("input-end-time").value;
     const type = document.getElementById("input-type").value;
     const title = document.getElementById("input-title").value;
     const desc = document.getElementById("input-desc").value;
@@ -1227,12 +1235,12 @@
     if (editId) {
       const item = itemsData.find(i => i.id == editId);
       if (item) {
-        item.date = date; item.time = time; item.title = title; item.desc = desc; item.type = type; item.status = status; item.member = member; item.links = parsedLinks;
+        item.date = date; item.time = time; item.endDate = endDate; item.endTime = endTime; item.title = title; item.desc = desc; item.type = type; item.status = status; item.member = member; item.links = parsedLinks;
       }
       alert("更新しました！");
     } else {
       itemsData.push({ 
-        id: Date.now(), type, date, endDate: "", time: time, title, desc, status, member: member, links: parsedLinks, 
+        id: Date.now(), type, date, endDate, time, endTime, title, desc, status, member: member, links: parsedLinks, 
         reservations: JSON.parse(JSON.stringify(defaultReservations))
       });
       addNotification(title);
@@ -1312,7 +1320,13 @@
     
     let dateTimeText = `📅 ${item.date}`;
     if (item.time && item.type !== "MAGAZINE" && item.type !== "CD発売" && item.type !== "ANNIVERSARY") {
-      dateTimeText += ` 🕒 ${item.time}`;
+      dateTimeText += ` ${item.time}`;
+      if (item.endDate || item.endTime) {
+        let endStr = "";
+        if (item.endDate && item.endDate !== item.date) endStr += `${item.endDate} `;
+        if (item.endTime) endStr += `${item.endTime}`;
+        if (endStr.trim()) dateTimeText += ` 〜 ${endStr.trim()}`;
+      }
     }
 
     let statusTagsHtml = (Array.isArray(item.status) ? item.status : [item.status]).map(st => `<span class="member-tag">${st}</span>`).join(" ");
@@ -1355,6 +1369,8 @@
     document.getElementById("edit-item-id").value = item.id;
     document.getElementById("input-date").value = item.date;
     document.getElementById("input-time").value = item.time || "20:00";
+    document.getElementById("input-end-date").value = item.endDate || item.date;
+    document.getElementById("input-end-time").value = item.endTime || "21:00";
     document.getElementById("input-title").value = item.title;
     document.getElementById("input-desc").value = item.desc || "";
     document.getElementById("input-member").value = item.member || "ROIROM";
@@ -1467,6 +1483,7 @@
   }
 
   document.getElementById("input-date").value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+  document.getElementById("input-end-date").value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
 </script>
 
 </body>
