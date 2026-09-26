@@ -220,7 +220,7 @@
     .cal-cell.is-today { background: #eaeaea !important; border: 2px solid var(--deep-color) !important; }
     .cal-day-num { font-weight: bold; color: #444; margin-bottom: 2px; display: block; }
     
-    /* 1本につながる帯（バー）スタイル：タイトル全体表示対応 */
+    /* 1本につながる帯（バー）スタイル：全体にタイトルを1つ配置 */
     .cal-event-bar { 
       padding: 2px 4px; 
       margin-bottom: 2px; 
@@ -1521,7 +1521,7 @@
 
           evEl.className = `cal-event-bar ${colorClass} ${positionClass}`;
           
-          // どのセルでもタイトルを常時全表示するように変更
+          // バー全体にタイトルが表示されるように変更（すべての日にタイトルを配置し、長さを活かす）
           evEl.textContent = ev.title;
 
           cell.appendChild(evEl);
