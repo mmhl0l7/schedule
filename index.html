@@ -220,7 +220,6 @@
     .cal-cell.is-today { background: #eaeaea !important; border: 2px solid var(--deep-color) !important; }
     .cal-day-num { font-weight: bold; color: #444; margin-bottom: 2px; display: block; }
     
-    /* カレンダーバーのスタイル */
     .cal-event-bar { 
       padding: 2px 4px; 
       margin-bottom: 2px; 
@@ -453,18 +452,18 @@
     <input type="hidden" id="edit-item-id" value="">
     
     <div class="form-group" id="group-start">
-      <label>開始（日付と時間）</label>
+      <label id="label-start-text">日付</label>
       <div style="display: flex; gap: 6px;">
         <input type="date" id="input-date" style="flex: 2;">
-        <input type="time" id="input-time" value="20:00" style="flex: 1;">
+        <input type="time" id="input-time" value="20:00" style="flex: 1; display: none;">
       </div>
     </div>
     
     <div class="form-group" id="group-end">
-      <label>終了（日付と時間）</label>
+      <label>終了日</label>
       <div style="display: flex; gap: 6px;">
         <input type="date" id="input-end-date" style="flex: 2;">
-        <input type="time" id="input-end-time" value="21:00" style="flex: 1;">
+        <input type="time" id="input-end-time" value="21:00" style="flex: 1; display: none;">
       </div>
     </div>
 
@@ -906,8 +905,15 @@
   function updateFormVisibilityBytype() {
     const typeSelect = document.getElementById("input-type");
     const targetType = typeSelect ? typeSelect.value : currentMainType;
-    const hideEnd = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY");
-    document.getElementById("group-end").style.display = hideEnd ? "none" : "block";
+    const isMagazineOrCd = (targetType === "MAGAZINE" || targetType === "CD発売" || targetType === "ANNIVERSARY");
+    
+    // 終了日項目を切り替え
+    document.getElementById("group-end").style.display = isMagazineOrCd ? "none" : "block";
+    
+    // 時間設定の表示切り替え（MAGAZINE等の場合は時間を隠し、番組やイベントなら表示する）
+    document.getElementById("input-time").style.display = isMagazineOrCd ? "none" : "block";
+    document.getElementById("input-end-time").style.display = isMagazineOrCd ? "none" : "block";
+    document.getElementById("label-start-text").textContent = isMagazineOrCd ? "日付" : "開始（日付と時間）";
   }
 
   function updateFormTypeOptions() {
@@ -1286,18 +1292,20 @@
     if (status.length === 0) { alert("ステータスを1つ以上選択してください"); return; }
 
     const parsedLinks = parseLinks(document.getElementById("input-links").value);
-    const hideEnd = (type === "MAGAZINE" || type === "CD発売" || type === "ANNIVERSARY");
-    const finalEndDate = hideEnd ? "" : endDate;
+    const isMagazineOrCd = (type === "MAGAZINE" || type === "CD発売" || type === "ANNIVERSARY");
+    const finalEndDate = isMagazineOrCd ? "" : endDate;
+    const finalTime = isMagazineOrCd ? "" : time;
+    const finalEndTime = isMagazineOrCd ? "" : endTime;
 
     if (editId) {
       const item = itemsData.find(i => i.id == editId);
       if (item) {
-        item.date = date; item.time = time; item.endDate = finalEndDate; item.endTime = endTime; item.title = title; item.desc = desc; item.type = type; item.status = status; item.member = member; item.links = parsedLinks;
+        item.date = date; item.time = finalTime; item.endDate = finalEndDate; item.endTime = finalEndTime; item.title = title; item.desc = desc; item.type = type; item.status = status; item.member = member; item.links = parsedLinks;
       }
       alert("更新しました！");
     } else {
       itemsData.push({ 
-        id: Date.now(), type, date, endDate: finalEndDate, time, endTime, title, desc, status, member: member, links: parsedLinks, 
+        id: Date.now(), type, date, endDate: finalEndDate, time: finalTime, endTime: finalEndTime, title, desc, status, member: member, links: parsedLinks, 
         reservations: JSON.parse(JSON.stringify(defaultReservations))
       });
       addNotification(title);
